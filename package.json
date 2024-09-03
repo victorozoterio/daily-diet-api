@@ -3,13 +3,17 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "knex": "node --import tsx ./node_modules/knex/bin/cli.js",
     "lint:fix": "npx @biomejs/biome lint --write .",
     "format:fix": "npx @biomejs/biome format --write ."
   },
   "author": "Victor Ozoterio",
   "license": "ISC",
   "dependencies": {
-    "fastify": "^4.28.1"
+    "dotenv": "^16.4.5",
+    "fastify": "^4.28.1",
+    "knex": "^3.1.0",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.8.3",
