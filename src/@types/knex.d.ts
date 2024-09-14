@@ -12,5 +12,14 @@ declare module 'knex/types/tables' {
       updated_at: Date;
       session_uuid: string;
     };
+    meals: {
+      uuid: string;
+      name: string;
+      description: string;
+      is_within_the_diet: boolean;
+      user_uuid: string;
+      created_at: Date;
+      updated_at: Date;
+    };
   }
 }
