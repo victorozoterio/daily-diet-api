@@ -28,4 +28,13 @@ export async function mealsRoutes(app: FastifyInstance) {
 
     return reply.status(201).send(createdMeal);
   });
+
+  app.get('/', async (request, reply) => {
+    const sessionUuid = request.cookies.sessionUuid;
+    const user = await knex('users').where('session_uuid', sessionUuid).select('uuid').first();
+
+    const mealsOfUser = await knex('meals').where('user_uuid', user?.uuid).select();
+
+    return reply.status(200).send(mealsOfUser);
+  });
 }
