@@ -10,6 +10,7 @@ declare module 'knex/types/tables' {
       password: string;
       created_at: Date;
       updated_at: Date;
+      session_uuid: string;
     };
   }
 }

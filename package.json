@@ -10,6 +10,8 @@
   "author": "Victor Ozoterio",
   "license": "ISC",
   "dependencies": {
+    "@fastify/cookie": "^9.4.0",
+    "bcrypt": "^5.1.1",
     "dotenv": "^16.4.5",
     "fastify": "^4.28.1",
     "knex": "^3.1.0",
@@ -20,6 +22,7 @@
     "@biomejs/biome": "^1.8.3",
     "@commitlint/cli": "^19.4.1",
     "@commitlint/config-conventional": "^19.4.1",
+    "@types/bcrypt": "^5.0.2",
     "@types/node": "^22.5.2",
     "husky": "^9.1.5",
     "tsx": "^4.19.0",
