@@ -2,9 +2,10 @@ import { FastifyInstance } from 'fastify';
 import { knex } from '../config';
 import { z } from 'zod';
 import { randomUUID } from 'node:crypto';
+import { checkSessionUuidExists } from '../middlewares/check-session-uuid-exists';
 
 export async function mealsRoutes(app: FastifyInstance) {
-  app.post('/', async (request, reply) => {
+  app.post('/', { preHandler: [checkSessionUuidExists] }, async (request, reply) => {
     const createMealsBodySchema = z.object({
       name: z.string(),
       description: z.string(),
@@ -13,7 +14,7 @@ export async function mealsRoutes(app: FastifyInstance) {
 
     const { name, description, isWithinTheDiet } = createMealsBodySchema.parse(request.body);
 
-    const sessionUuid = request.cookies.sessionUuid;
+    const { sessionUuid } = request.cookies;
     const user = await knex('users').where('session_uuid', sessionUuid).select('uuid').first();
 
     const [createdMeal] = await knex('meals')
@@ -29,12 +30,12 @@ export async function mealsRoutes(app: FastifyInstance) {
     return reply.status(201).send(createdMeal);
   });
 
-  app.get('/', async (request, reply) => {
-    const sessionUuid = request.cookies.sessionUuid;
+  app.get('/', { preHandler: [checkSessionUuidExists] }, async (request, reply) => {
+    const { sessionUuid } = request.cookies;
     const user = await knex('users').where('session_uuid', sessionUuid).select('uuid').first();
 
-    const mealsOfUser = await knex('meals').where('user_uuid', user?.uuid).select();
+    const meals = await knex('meals').where('user_uuid', user?.uuid);
 
-    return reply.status(200).send(mealsOfUser);
+    return reply.status(200).send(meals);
   });
 }
