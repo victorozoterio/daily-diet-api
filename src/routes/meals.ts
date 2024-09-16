@@ -38,4 +38,16 @@ export async function mealsRoutes(app: FastifyInstance) {
 
     return reply.status(200).send(meals);
   });
+
+  app.get('/:uuid', { preHandler: [checkSessionUuidExists] }, async (request, reply) => {
+    const getMealsParamsSchema = z.object({ uuid: z.string().uuid() });
+    const { uuid } = getMealsParamsSchema.parse(request.params);
+
+    const { sessionUuid } = request.cookies;
+    const user = await knex('users').where('session_uuid', sessionUuid).select('uuid').first();
+
+    const meal = await knex('meals').where('user_uuid', user?.uuid).andWhere('uuid', uuid).first();
+
+    return reply.status(200).send(meal);
+  });
 }
