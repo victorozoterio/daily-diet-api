@@ -44,10 +44,46 @@ export async function mealsRoutes(app: FastifyInstance) {
     const { uuid } = getMealsParamsSchema.parse(request.params);
 
     const { sessionUuid } = request.cookies;
-    const user = await knex('users').where('session_uuid', sessionUuid).select('uuid').first();
 
-    const meal = await knex('meals').where('user_uuid', user?.uuid).andWhere('uuid', uuid).first();
+    const user = await knex('users').where('session_uuid', sessionUuid).select('uuid').first();
+    if (!user) return reply.status(404).send({ message: 'User does not exist.' });
+
+    const meal = await knex('meals').where('user_uuid', user.uuid).andWhere('uuid', uuid).first();
+    if (!meal) return reply.status(404).send({ message: 'Meal does not exist.' });
 
     return reply.status(200).send(meal);
+  });
+
+  app.put('/:uuid', { preHandler: [checkSessionUuidExists] }, async (request, reply) => {
+    const getMealsParamsSchema = z.object({ uuid: z.string().uuid() });
+    const { uuid } = getMealsParamsSchema.parse(request.params);
+
+    const updateMealsBodySchema = z.object({
+      name: z.string().optional(),
+      description: z.string().optional(),
+      isWithinTheDiet: z.boolean().optional(),
+    });
+
+    const { name, description, isWithinTheDiet } = updateMealsBodySchema.parse(request.body);
+
+    const { sessionUuid } = request.cookies;
+
+    const user = await knex('users').where('session_uuid', sessionUuid).select('uuid').first();
+    if (!user) return reply.status(404).send({ message: 'User does not exist.' });
+
+    const meal = await knex('meals').where('user_uuid', user.uuid).andWhere('uuid', uuid).first();
+    if (!meal) return reply.status(404).send({ message: 'Meal does not exist.' });
+
+    const updatedMeal = await knex('meals')
+      .where('uuid', uuid)
+      .update({
+        name: name ?? meal.name,
+        description: description ?? meal.description,
+        is_within_the_diet: isWithinTheDiet ?? meal.is_within_the_diet,
+        updated_at: knex.fn.now(),
+      })
+      .returning('*');
+
+    return reply.status(200).send(updatedMeal);
   });
 }
