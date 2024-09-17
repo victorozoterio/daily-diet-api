@@ -86,4 +86,21 @@ export async function mealsRoutes(app: FastifyInstance) {
 
     return reply.status(200).send(updatedMeal);
   });
+
+  app.delete('/:uuid', { preHandler: [checkSessionUuidExists] }, async (request, reply) => {
+    const getMealsParamsSchema = z.object({ uuid: z.string().uuid() });
+    const { uuid } = getMealsParamsSchema.parse(request.params);
+
+    const { sessionUuid } = request.cookies;
+
+    const user = await knex('users').where('session_uuid', sessionUuid).select('uuid').first();
+    if (!user) return reply.status(404).send({ message: 'User does not exist.' });
+
+    const meal = await knex('meals').where('user_uuid', user.uuid).andWhere('uuid', uuid).first();
+    if (!meal) return reply.status(404).send({ message: 'Meal does not exist.' });
+
+    await knex('meals').where('uuid', uuid).delete();
+
+    return reply.status(204).send();
+  });
 }
