@@ -3,6 +3,7 @@ import { knex } from '../config';
 import { z } from 'zod';
 import { randomUUID } from 'node:crypto';
 import { checkSessionUuidExists } from '../middlewares/check-session-uuid-exists';
+import { isValidDateAndTimeFormat } from '../utils';
 
 export async function mealsRoutes(app: FastifyInstance) {
   app.post('/', { preHandler: [checkSessionUuidExists] }, async (request, reply) => {
@@ -10,9 +11,14 @@ export async function mealsRoutes(app: FastifyInstance) {
       name: z.string(),
       description: z.string(),
       isWithinTheDiet: z.boolean(),
+      dateAndTime: z.string().refine((date) => isValidDateAndTimeFormat(date), {
+        message: 'Expected YYYY-MM-DD HH:MM:SS',
+      }),
     });
 
-    const { name, description, isWithinTheDiet } = createMealsBodySchema.parse(request.body);
+    const { name, description, isWithinTheDiet, dateAndTime } = createMealsBodySchema.parse(
+      request.body,
+    );
 
     const { sessionUuid } = request.cookies;
     const user = await knex('users').where('session_uuid', sessionUuid).select('uuid').first();
@@ -24,6 +30,7 @@ export async function mealsRoutes(app: FastifyInstance) {
         description,
         is_within_the_diet: isWithinTheDiet,
         user_uuid: user?.uuid,
+        date_and_time: dateAndTime,
       })
       .returning('*');
 
@@ -62,9 +69,17 @@ export async function mealsRoutes(app: FastifyInstance) {
       name: z.string().optional(),
       description: z.string().optional(),
       isWithinTheDiet: z.boolean().optional(),
+      dateAndTime: z
+        .string()
+        .optional()
+        .refine((date) => !date || isValidDateAndTimeFormat(date), {
+          message: 'Expected YYYY-MM-DD HH:MM:SS',
+        }),
     });
 
-    const { name, description, isWithinTheDiet } = updateMealsBodySchema.parse(request.body);
+    const { name, description, isWithinTheDiet, dateAndTime } = updateMealsBodySchema.parse(
+      request.body,
+    );
 
     const { sessionUuid } = request.cookies;
 
@@ -80,7 +95,7 @@ export async function mealsRoutes(app: FastifyInstance) {
         name: name ?? meal.name,
         description: description ?? meal.description,
         is_within_the_diet: isWithinTheDiet ?? meal.is_within_the_diet,
-        updated_at: knex.fn.now(),
+        date_and_time: dateAndTime ?? meal.date_and_time,
       })
       .returning('*');
 

@@ -18,8 +18,7 @@ declare module 'knex/types/tables' {
       description: string;
       is_within_the_diet: boolean;
       user_uuid: string;
-      created_at: Date;
-      updated_at: Date;
+      date_and_time: string;
     };
   }
 }
