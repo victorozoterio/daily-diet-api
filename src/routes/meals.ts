@@ -16,25 +16,39 @@ export async function mealsRoutes(app: FastifyInstance) {
       }),
     });
 
-    const { name, description, isWithinTheDiet, dateAndTime } = createMealsBodySchema.parse(
-      request.body,
-    );
+    try {
+      const { name, description, isWithinTheDiet, dateAndTime } = createMealsBodySchema.parse(
+        request.body,
+      );
 
-    const { sessionUuid } = request.cookies;
-    const user = await knex('users').where('session_uuid', sessionUuid).select('uuid').first();
+      const { sessionUuid } = request.cookies;
+      const user = await knex('users').where('session_uuid', sessionUuid).select('uuid').first();
 
-    const [createdMeal] = await knex('meals')
-      .insert({
-        uuid: randomUUID(),
-        name,
-        description,
-        is_within_the_diet: isWithinTheDiet,
-        user_uuid: user?.uuid,
-        date_and_time: dateAndTime,
-      })
-      .returning('*');
+      const [createdMeal] = await knex('meals')
+        .insert({
+          uuid: randomUUID(),
+          name,
+          description,
+          is_within_the_diet: isWithinTheDiet,
+          user_uuid: user?.uuid,
+          date_and_time: dateAndTime,
+        })
+        .returning('*');
 
-    return reply.status(201).send(createdMeal);
+      return reply.status(201).send(createdMeal);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const formattedErrors = error.errors.map((err) => {
+          return `${err.path.join('.')} ${err.message}`;
+        });
+
+        return reply.status(400).send({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: formattedErrors,
+        });
+      }
+    }
   });
 
   app.get('/', { preHandler: [checkSessionUuidExists] }, async (request, reply) => {
@@ -77,29 +91,43 @@ export async function mealsRoutes(app: FastifyInstance) {
         }),
     });
 
-    const { name, description, isWithinTheDiet, dateAndTime } = updateMealsBodySchema.parse(
-      request.body,
-    );
+    try {
+      const { name, description, isWithinTheDiet, dateAndTime } = updateMealsBodySchema.parse(
+        request.body,
+      );
 
-    const { sessionUuid } = request.cookies;
+      const { sessionUuid } = request.cookies;
 
-    const user = await knex('users').where('session_uuid', sessionUuid).select('uuid').first();
-    if (!user) return reply.status(404).send({ message: 'User does not exist.' });
+      const user = await knex('users').where('session_uuid', sessionUuid).select('uuid').first();
+      if (!user) return reply.status(404).send({ message: 'User does not exist.' });
 
-    const meal = await knex('meals').where('user_uuid', user.uuid).andWhere('uuid', uuid).first();
-    if (!meal) return reply.status(404).send({ message: 'Meal does not exist.' });
+      const meal = await knex('meals').where('user_uuid', user.uuid).andWhere('uuid', uuid).first();
+      if (!meal) return reply.status(404).send({ message: 'Meal does not exist.' });
 
-    const updatedMeal = await knex('meals')
-      .where('uuid', uuid)
-      .update({
-        name: name ?? meal.name,
-        description: description ?? meal.description,
-        is_within_the_diet: isWithinTheDiet ?? meal.is_within_the_diet,
-        date_and_time: dateAndTime ?? meal.date_and_time,
-      })
-      .returning('*');
+      const updatedMeal = await knex('meals')
+        .where('uuid', uuid)
+        .update({
+          name: name ?? meal.name,
+          description: description ?? meal.description,
+          is_within_the_diet: isWithinTheDiet ?? meal.is_within_the_diet,
+          date_and_time: dateAndTime ?? meal.date_and_time,
+        })
+        .returning('*');
 
-    return reply.status(200).send(updatedMeal);
+      return reply.status(200).send(updatedMeal);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const formattedErrors = error.errors.map((err) => {
+          return `${err.path.join('.')} ${err.message}`;
+        });
+
+        return reply.status(400).send({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: formattedErrors,
+        });
+      }
+    }
   });
 
   app.delete('/:uuid', { preHandler: [checkSessionUuidExists] }, async (request, reply) => {
