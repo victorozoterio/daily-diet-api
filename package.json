@@ -6,7 +6,8 @@
     "start:dev": "npm run knex -- migrate:latest && tsx watch src/server.ts",
     "knex": "node --import tsx ./node_modules/knex/bin/cli.js",
     "lint:fix": "npx @biomejs/biome lint --write .",
-    "format:fix": "npx @biomejs/biome format --write ."
+    "format:fix": "npx @biomejs/biome format --write .",
+    "test": "vitest"
   },
   "author": "Victor Ozoterio",
   "license": "ISC",
@@ -25,9 +26,12 @@
     "@commitlint/config-conventional": "^19.4.1",
     "@types/bcrypt": "^5.0.2",
     "@types/node": "^22.5.2",
+    "@types/supertest": "^6.0.2",
     "husky": "^9.1.5",
+    "supertest": "^7.0.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.1"
   },
   "commitlint": {
     "extends": [

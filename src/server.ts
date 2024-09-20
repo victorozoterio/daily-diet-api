@@ -4,7 +4,7 @@ import { env } from './config';
 import { usersRoutes } from './routes/users';
 import { mealsRoutes } from './routes/meals';
 
-const app = fastify();
+export const app = fastify();
 
 app.register(cookie);
 app.register(usersRoutes, { prefix: 'users' });
