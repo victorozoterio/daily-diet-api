@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "start:dev": "npm run knex -- migrate:latest && tsx watch src/server.ts",
     "knex": "node --import tsx ./node_modules/knex/bin/cli.js",
     "lint:fix": "npx @biomejs/biome lint --write .",
     "format:fix": "npx @biomejs/biome format --write ."

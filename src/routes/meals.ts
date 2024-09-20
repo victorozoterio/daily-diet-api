@@ -75,6 +75,49 @@ export async function mealsRoutes(app: FastifyInstance) {
     return reply.status(200).send(meal);
   });
 
+  app.get('/metrics', { preHandler: [checkSessionUuidExists] }, async (request, reply) => {
+    const { sessionUuid } = request.cookies;
+
+    const user = await knex('users').where('session_uuid', sessionUuid).select('uuid').first();
+    if (!user) return reply.status(404).send({ message: 'User does not exist.' });
+
+    const totalMeals = await knex('meals')
+      .where('user_uuid', user.uuid)
+      .orderBy('date_and_time', 'desc');
+
+    const totalMealsWithinTheDiet = await knex('meals')
+      .where('user_uuid', user.uuid)
+      .andWhere('is_within_the_diet', 1);
+
+    const totalMealsOutsideTheDiet = await knex('meals')
+      .where('user_uuid', user.uuid)
+      .andWhere('is_within_the_diet', 0);
+
+    const { bestSequenceOfMealsWithinTheDiet } = totalMeals.reduce(
+      (acc, meal) => {
+        if (meal.is_within_the_diet) {
+          acc.currentSequence += 1;
+        } else {
+          acc.currentSequence = 0;
+        }
+
+        if (acc.currentSequence > acc.bestSequenceOfMealsWithinTheDiet) {
+          acc.bestSequenceOfMealsWithinTheDiet = acc.currentSequence;
+        }
+
+        return acc;
+      },
+      { bestSequenceOfMealsWithinTheDiet: 0, currentSequence: 0 },
+    );
+
+    return reply.status(200).send({
+      totalMeals: totalMeals.length,
+      totalMealsWithinTheDiet: totalMealsWithinTheDiet.length,
+      totalMealsOutsideTheDiet: totalMealsOutsideTheDiet.length,
+      bestSequenceOfMealsWithinTheDiet: bestSequenceOfMealsWithinTheDiet,
+    });
+  });
+
   app.put('/:uuid', { preHandler: [checkSessionUuidExists] }, async (request, reply) => {
     const getMealsParamsSchema = z.object({ uuid: z.string().uuid() });
     const { uuid } = getMealsParamsSchema.parse(request.params);
