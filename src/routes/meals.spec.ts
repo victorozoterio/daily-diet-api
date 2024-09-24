@@ -120,4 +120,74 @@ describe('Meals routes', () => {
       date_and_time: '2024-09-20 16:00:00',
     });
   });
+
+  it('should be able to return metrics of meals eaten', async () => {
+    const createUser = await request(app.server)
+      .post('/users')
+      .send({
+        name: 'user',
+        email: 'user@gmail.com',
+        password: 'user@123',
+      })
+      .expect(201);
+
+    const cookies = createUser.headers['set-cookie'];
+    expect(cookies[0]).toContain('sessionUuid');
+
+    await request(app.server)
+      .post('/meals')
+      .set('Cookie', cookies)
+      .send({
+        name: 'Salada de fruta',
+        description: 'mamão, aveia e banana',
+        isWithinTheDiet: true,
+        dateAndTime: '2024-09-20 16:00:00',
+      })
+      .expect(201);
+
+    await request(app.server)
+      .post('/meals')
+      .set('Cookie', cookies)
+      .send({
+        name: 'Vitamina',
+        description: 'morango, aveia, banana e beterraba',
+        isWithinTheDiet: true,
+        dateAndTime: '2024-09-20 18:00:00',
+      })
+      .expect(201);
+
+    await request(app.server)
+      .post('/meals')
+      .set('Cookie', cookies)
+      .send({
+        name: 'X-tudo',
+        description: 'pão, hambuger, ovo e bacon',
+        isWithinTheDiet: false,
+        dateAndTime: '2024-09-20 21:00:00',
+      })
+      .expect(201);
+
+    await request(app.server)
+      .post('/meals')
+      .set('Cookie', cookies)
+      .send({
+        name: 'Omelete',
+        description: 'pão integral e ovos',
+        isWithinTheDiet: true,
+        dateAndTime: '2024-09-21 08:00:00',
+      })
+      .expect(201);
+
+    const response = await request(app.server)
+      .get('/meals/metrics')
+      .set('Cookie', cookies)
+      .expect(200);
+
+    expect(response.body).toEqual({
+      totalMeals: 4,
+      totalMealsWithinTheDiet: 3,
+      totalMealsOutsideTheDiet: 1,
+      bestSequenceOfMealsWithinTheDiet: 2,
+    });
+  });
 });
