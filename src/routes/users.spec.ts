@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest';
 import request from 'supertest';
-import { app } from '../server';
+import { app } from '../app';
 import { execSync } from 'node:child_process';
 
 describe('Users routes', () => {
