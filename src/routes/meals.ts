@@ -147,7 +147,7 @@ export async function mealsRoutes(app: FastifyInstance) {
       const meal = await knex('meals').where('user_uuid', user.uuid).andWhere('uuid', uuid).first();
       if (!meal) return reply.status(404).send({ message: 'Meal does not exist.' });
 
-      const updatedMeal = await knex('meals')
+      const [updatedMeal] = await knex('meals')
         .where('uuid', uuid)
         .update({
           name: name ?? meal.name,
